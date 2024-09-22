@@ -1,0 +1,44 @@
+# Entornos virtuales
+venv/
+.env
+.venv/
+
+# Archivos de compilación
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Archivos de configuración de IDE
+.idea/
+.vscode/
+*.swp
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de distribución
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Archivos de prueba
+*.log
+*.pot
+*.mo
+*.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Otros archivos
+*.db
+*.sqlite3
+*.sqlite
