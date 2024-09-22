@@ -17,9 +17,6 @@ requisito, mi nombre tiene que estar en el mensaje legitimo y el del profesor en
 
 import hashlib
 import itertools
-import time
-from itertools import product
-from marshal import dumps
 from typing import List
 
 with open('blanco.txt', 'r') as archivo:
@@ -50,6 +47,7 @@ def blanco_combined_text(code: List[int]):
             r[line] = BLANCO1[line]
 
     return "".join(r)
+
 
 def negro_combined_text(code: List[int]):
     r = NEGRO.copy()
