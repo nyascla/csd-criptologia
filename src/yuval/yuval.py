@@ -17,13 +17,22 @@ requisito, mi nombre tiene que estar en el mensaje legitimo y el del profesor en
 
 import hashlib
 import itertools
+import time
+from itertools import product
+from marshal import dumps
 from typing import List
 
-with open('text_blanco.txt', 'r') as archivo:
+with open('blanco.txt', 'r') as archivo:
     BLANCO = archivo.readlines()
 
-with open('text_negro.txt', 'r') as archivo:
+with open('blanco1.txt', 'r') as archivo:
+    BLANCO1 = archivo.readlines()
+
+with open('negro.txt', 'r') as archivo:
     NEGRO = archivo.readlines()
+
+with open('negro1.txt', 'r') as archivo:
+    NEGRO1 = archivo.readlines()
 
 
 def hash_string(s):
@@ -34,28 +43,47 @@ def hash_string(s):
     return hashlib.sha256(s.encode()).hexdigest()[:10]
 
 
-def combined_text(code: List[int]):
+def blanco_combined_text(code: List[int]):
     r = BLANCO.copy()
     for line, c in enumerate(code):
         if c > 0:
-            r[line] = NEGRO[line]
+            r[line] = BLANCO1[line]
+
+    return "".join(r)
+
+def negro_combined_text(code: List[int]):
+    r = NEGRO.copy()
+    for line, c in enumerate(code):
+        if c > 0:
+            r[line] = NEGRO1[line]
 
     return "".join(r)
 
 
 if "__main__" == __name__:
+    combinations = list(itertools.product([0, 1], repeat=20))
 
-    combinations = itertools.product([0, 1], repeat=20)
+    dic_blanco = {}
+    print(f"crea dic_blanco")
+    for combination in combinations:
+        text = blanco_combined_text(combination)
+        key = hash_string(text)
+        dic_blanco[key] = combination
+    print(f"dic_blanco keys:{len(dic_blanco.keys())}")
 
-    dic = {}
-    try:
+    cont = 0
+    colision = False
+    while not colision:
+        print(f"round: {cont}")
         for combination in combinations:
-            print(combination)
-            text = combined_text(combination)
-            dic[hash_string(text)] = combination
+            text = negro_combined_text(combination)
+            key = hash_string(text)
+            if key in dic_blanco:
+                print(f"COLISION: {combination}:{key}")
+                colision = True
+                break
 
-    except:
-        print("colision")
+        cont += 1
 
 '''
 DUDAS
