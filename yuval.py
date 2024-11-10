@@ -35,6 +35,7 @@ logger = get_logger(os.path.basename(__file__), LOGPATH)
 class T(Enum):
     BLANCO = "blanco"
     NEGRO = "negro"
+    TEST = "test"
 
 
 def combine_texts(code: Tuple[int, ...], a, b):
@@ -86,7 +87,7 @@ def do():
     logger.info(f"keys para el dic blanco: {len(dic_blanco)}")
 
     cont = 0
-    texts_negro = get_all_texts(T.NEGRO.value)
+    texts_negro = get_all_texts(T.TEST.value)
     for text_to_combine in texts_negro[1:]:
         logger.info(f"randa: {cont}")
         d = 0
@@ -101,15 +102,16 @@ def do():
                             f"{text}")
 
                 return
-            d += 1
-            logger.info(f"randa: {cont} keys comparados: {d}")
+        d += 1
+        logger.info(f"randa: {cont} keys comparados: {d}")
 
 
 
         cont += 1
 
 
-
+# f35efea57ee388945abec4d6a0480ec03cc20239e6bab54d3135c6e1a81af9da
+# f35efea57e97355514972c5be2a6fdb19643fab7297a63d6d1ab4eb1a5e637c2
 
 
 
