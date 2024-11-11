@@ -2,10 +2,12 @@ import json
 import os
 import time
 from datetime import datetime
+from math import floor
 
 from arcoiris_config import PASSWORD_SIZE, HASH_SIZE, CHAIN_SIZE, PATH, NAME
-from arcoiris_table import build_table, build_dataset, reduce_hex_to_n_digits, hash_string, generar_cadena
+from arcoiris_table import build_table, build_dataset, hash_string, generar_cadena
 from logs.logger import get_logger
+from arcoiris_reduces import generador_funciones_reduccion_inv, generador_funciones_reduccion, R
 
 DIR = "logs/arcoiris"
 os.makedirs(DIR, exist_ok=True)
@@ -16,51 +18,69 @@ logger = get_logger(os.path.basename(__file__), LOGPATH)
 
 
 def check_rainbow_table(table, target_hash):
-    logger.info(f"### check_rainbow_table | target: {target_hash} ###")
-    possible_end_password = reduce_hex_to_n_digits(target_hash, PASSWORD_SIZE)
+    # Conjunto para almacenar posibles contraseñas únicas encontradas
+    unique_passwords = set()
 
-    password_unicas = set()
-    coincide_end_point = set()
+    step = 1
 
-    for xxx in range(CHAIN_SIZE):
+    while step <= CHAIN_SIZE:
+        # Construir la lista de funciones de reducción aplicables
+        reduction_functions = get_reduction_functions(step)
 
-        # logger.info(f"possible_end_password: {possible_end_password}")
+        logger.info(f"Step {step}: Using {len(reduction_functions)} reduction functions")
 
-        if possible_end_password in table and possible_end_password not in password_unicas:
-            # logger.info(f"starting_points: {table[possible_end_password]}")
-            for starting_point in table[possible_end_password]:
-                cracked_password = check_chain(starting_point, target_hash)
+        current_hash = target_hash
 
-                if cracked_password:
-                    logger.info(f"##### ##### ##### #####")
-                    logger.info(f"password_unicas: {len(password_unicas)}")
+        for func_index, reduction_func in enumerate(reduction_functions):
+            # Generar una posible contraseña final usando la función de reducción
+            potential_password = reduction_func(current_hash, PASSWORD_SIZE)
 
-                    return cracked_password
+            logger.info(
+                f"  Step {func_index}: Using {reduction_func.__name__} on hash {current_hash} -> Potential password: {potential_password}"
+            )
 
-        hash_password = hash_string(possible_end_password, HASH_SIZE)
-        password_unicas.add(possible_end_password)
-        possible_end_password = reduce_hex_to_n_digits(hash_password, PASSWORD_SIZE)
+            # Verificar si la contraseña posible está en la tabla y no ha sido probada
+            if potential_password in table and potential_password not in unique_passwords:
+                for initial_password in table[potential_password]:
+                    cracked_password = check_chain(initial_password, target_hash)
+                    if cracked_password:
+                        return cracked_password
 
-    logger.info(f"##### ##### ##### #####")
-    logger.info(f"password_unicas: {len(password_unicas)}")
+            # Agregar la contraseña generada a la lista de contraseñas únicas
+            unique_passwords.add(potential_password)
+            current_hash = hash_string(potential_password, HASH_SIZE)
+
+        step += 1
+
+
+def get_reduction_functions(step):
+    """Devuelve la secuencia de funciones de reducción para un paso dado."""
+    full_cycles = step // len(R)
+    partial_cycle = step % len(R)
+
+    # Construir la lista de funciones en el orden adecuado
+    reduction_functions = R[-partial_cycle:] if partial_cycle > 0 else []
+    reduction_functions += R * full_cycles
+
+    return reduction_functions
+
+# 16787 -H-> 2ed8e705dc -R-reduce_hex_to_n_digits-> 14588 | 14588 -H-> 9470307c22 -R-reduce_hex_with_multiplication-> 56518 | 56518 -H-> a7a285bea4 -R-reduce_hex_with_bit_manipulation-> 04048 | 04048 -H-> f79571532f -R-reduce_hex_rotate-> 18489 | 18489 -H-> 5d52bce12b -R-reduce_hex_with_string_manipulation-> 59541 | 59541 -H-> eadf8efacc -R-reduce_hex_sqrt-> 04376 | 04376 -H-> 7dacc04ac1 -R-reduce_hex_sin-> 16697 | 16697 -H-> 654c495ab1 -R-reduce_hex_power_mod-> 32527 | 32527 -H-> 279e8662a8 -R-reduce_hex_to_decimal-> 74865 | 74865 -H-> 498c9f9cfe -R-reduce_hex_to_decimal_v2-> 79005 |
 
 
 def check_chain(starting_point, target_hash):
-    # logger.info(f"### check_chain | starting_point: {starting_point} target_hash: {target_hash} ###")
+    reduccion_iterate_chain = generador_funciones_reduccion()
 
     password = starting_point
-    for yyy in range(CHAIN_SIZE):
+    for _ in range(CHAIN_SIZE):
         hash_password = hash_string(password, HASH_SIZE)
 
         if hash_password == target_hash:
-            logger.info(f"starting_point {starting_point} target: {target_hash} password: {password}")
             return password
 
-        next_password = reduce_hex_to_n_digits(hash_password, PASSWORD_SIZE)
-
+        funcion_iterate_chain = next(reduccion_iterate_chain)
+        next_password = funcion_iterate_chain(hash_password, PASSWORD_SIZE)
         password = next_password
 
-    # logger.info(f"target NO encontrado")
     return
 
 

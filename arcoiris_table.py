@@ -7,7 +7,7 @@ from datetime import datetime
 
 from arcoiris_config import CHARACTER_SPACE, PASSWORD_SIZE, HASH_SIZE, TABLE_SIZE, CHAIN_SIZE, NAME, PATH
 from logs.logger import get_logger
-
+from arcoiris_reduces import reduccion
 
 
 def init_logger():
@@ -24,41 +24,6 @@ def hash_string(s, size):
     # devuelve el hash en formato hexadecimal.
     # carácter hexadecimal 4 bits x 10 = 40 bits.
     return hashlib.sha256(s.encode()).hexdigest()[:size]
-
-
-def LEGACY_reduce_hex_to_n_digits(hex_str, n):
-    """ probablemente no distribuirá los valores de forma uniforme """
-    # Convertir la cadena hexadecimal a un número decimal
-    decimal_value = int(hex_str, 16)
-
-    # Obtener el valor máximo posible según la longitud de la cadena hexadecimal
-    max_hex_value = int("F" * len(hex_str), 16)  # Por ejemplo, "FFF" para 3 caracteres, "FFFF" para 4, etc.
-
-    # Escalar el valor decimal al rango de 0-999999 (o el valor máximo según el tamaño deseado)
-    max_resultado_value = 10 ** n - 1  # El valor máximo según el tamaño del resultado
-    scaled_value = int(decimal_value * (max_resultado_value / max_hex_value))
-
-    # Formatear el número como una cadena con ceros a la izquierda según el tamaño deseado
-    return f"{scaled_value:0{n}d}"
-
-
-def LEGACYreduce_hex_to_n_digits(hex_str, n):
-    """ probablemente no distribuirá los valores de forma uniforme """
-    decimal_value = int(hex_str, 16)
-    value = str(decimal_value)[-n:].zfill(n)  # ultimos n valores
-    return value
-
-
-def reduce_hex_to_n_digits(hex_str, n):
-    """ mapeo modular genera una distribución más uniforme """
-    # Convertir la cadena hexadecimal a un número decimal
-    decimal_value = int(hex_str, 16)
-    # Obtener el valor máximo posible para la longitud deseada
-    max_resultado_value = 10 ** n - 1
-    # Hacer un mapeo modular para obtener una distribución uniforme
-    scaled_value = decimal_value % (max_resultado_value + 1)
-    # Formatear el número como una cadena con ceros a la izquierda
-    return f"{scaled_value:0{n}d}"
 
 
 def generar_cadena():
@@ -99,17 +64,18 @@ def build_table(dataset):
 
 
 def build_chain(password, l, password_unicas):
-    # s = ""
+    s = ""
     for _ in range(CHAIN_SIZE):
         password_unicas.add(password)
 
         hash_password = hash_string(password, HASH_SIZE)
-        next_password = reduce_hex_to_n_digits(hash_password, PASSWORD_SIZE)
-        # s += f"{password} -H-> {hash_password} -R-> {next_password} | "
+        funcion_reduccion = next(reduccion)
+        next_password = funcion_reduccion(hash_password, PASSWORD_SIZE)
+        s += f"{password} -H-> {hash_password} -R-{funcion_reduccion.__name__}-> {next_password} | "
 
         password = next_password
 
-    # l.info(s)
+    l.info(s)
 
     return password
 
