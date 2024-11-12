@@ -1,9 +1,9 @@
 import os
 
 CHARACTER_SPACE = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
-PASSWORD_SIZE = 6
+PASSWORD_SIZE = 3
 HASH_SIZE = 10
-TABLE_SIZE = 70000
+TABLE_SIZE = 1000
 CHAIN_SIZE = 300
 
 DIR = "arcoiris"

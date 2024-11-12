@@ -9,7 +9,6 @@ from arcoiris_config import CHARACTER_SPACE, PASSWORD_SIZE, HASH_SIZE, TABLE_SIZ
 from logs.logger import get_logger
 from arcoiris_reduces import reduccion
 
-
 def init_logger():
     dir = "logs/arcoiris"
     os.makedirs(dir, exist_ok=True)
@@ -87,21 +86,25 @@ if "__main__" == __name__:
         print("hash demasiado pequenyo, no abarca el espacio de claves")
         print(x, d, len(str(d)))
         exit()
+    s = "354263"
 
-    starting_points = build_dataset()
-    build_table(starting_points)
+
+    # starting_points = build_dataset()
+    # build_table(starting_points)
 
     # for x in starting_points:
     #     h = hash_string(x, HASH_SIZE)
     #     r = reduce_hex_to_n_digits(h, PASSWORD_SIZE)
     #     print(f"{x} -H-> {h} -R-> {r} | ")
 
-    # starting_points = build_dataset()
-    # p = "000"
-    # for _ in range(1000):
-    #
-    #     h = hash_string(p, HASH_SIZE)
-    #     r = LEGACY_reduce_hex_to_n_digits(h, PASSWORD_SIZE)
-    #     p = r
-    #     print(r)
+    starting_points = build_dataset()
+    p = "309"
+    hh = set()
+    for _ in range(1000):
+        h = hash_string(p, HASH_SIZE)
+        funcion_reduccion = next(reduccion)
+        r = funcion_reduccion(h, PASSWORD_SIZE)
+        p = r
+        hh.add(p)
 
+    print(len(hh))

@@ -132,7 +132,6 @@ R = [
     reduce_hex_to_decimal_v2
 ]
 
-print(R[-0:])
 
 def generador_funciones_reduccion_inv():
     index = 1
@@ -154,7 +153,7 @@ def generador_funciones_reduccion():
 
 reduccion = generador_funciones_reduccion()
 
-print(reduccion)
+
 
 inv = generador_funciones_reduccion_inv()
 

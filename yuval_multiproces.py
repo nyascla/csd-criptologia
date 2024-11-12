@@ -22,6 +22,7 @@ import os
 import time
 from datetime import datetime
 from enum import Enum
+from multiprocessing import Pool
 from typing import Tuple
 
 from arcoiris_config import HASH_SIZE
@@ -106,33 +107,41 @@ def build_blanco():
         return dic_blanco
 
 
-def do(dic_blanco):
-    combinations = list(itertools.product([0, 1], repeat=20))
+def check_colisions(work):
+    dic_blanco, combinations, t_base, t_alt, n_alt = work
+    logger.info(f"ronda: {n_alt}")
 
+    r = []
+    for combination in combinations:
+
+        text = combine_texts(combination, t_base, t_alt)
+        key = hash_string(text)
+
+        if key in dic_blanco:
+            # logger.info(f"########## COLISION ##########")
+            # logger.info(f"negro | 0 y {cont} | combination: {combination}")
+            # logger.info(f"blanco | 0 y {dic_blanco[key][2]} | combination: {dic_blanco[key][0]}")
+            r.append((0, dic_blanco[key][2], dic_blanco[key][0], 0, n_alt, combination))
+
+    return r
+
+
+def do(dic_blanco):
     logger.info(f"keys para el dic blanco: {len(dic_blanco)}")
 
-    cont = 1
-    textos_unicos = 0
+    combinations = list(itertools.product([0, 1], repeat=20))
+
+    w = []
     texts_negro = get_all_texts(T.NEGRO.value)
-    r = []
-    for text_to_combine in texts_negro[1:]:
-        logger.info(f"rOnda: {cont}")
+    for index, text_to_combine in enumerate(texts_negro[1:]):
+        work = (dic_blanco, combinations, texts_negro[0], text_to_combine, index + 1)
+        w.append(work)
 
-        for combination in combinations:
-            textos_unicos += 1
+    with Pool(processes=10) as pool:
+        results = pool.map(check_colisions, w)
 
-            text = combine_texts(combination, texts_negro[0], text_to_combine)
-            key = hash_string(text)
-
-            if key in dic_blanco:
-                # logger.info(f"########## COLISION ##########")
-                # logger.info(f"negro | 0 y {cont} | combination: {combination}")
-                # logger.info(f"blanco | 0 y {dic_blanco[key][2]} | combination: {dic_blanco[key][0]}")
-                r.append((0, dic_blanco[key][2], dic_blanco[key][0], 0, cont, combination))
-
-        cont += 1
-    logger.info(f"textos_unicos: {textos_unicos}")
-    return r
+    resultado = list(itertools.chain(*results))
+    return resultado
 
 
 def check_resulto(b1, b2, bc, n1, n2, nc):
@@ -158,7 +167,7 @@ def check_resulto(b1, b2, bc, n1, n2, nc):
 
 
 if "__main__" == __name__:
-    HASH_SIZE = 5
+    HASH_SIZE = 10
     d = build_blanco()
 
     start_time = time.perf_counter()
